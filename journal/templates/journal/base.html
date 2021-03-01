@@ -1,0 +1,222 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    {% if title %}
+    <title> {{ title }} </title>
+    {% else %}
+    <title> Чанг Ан Журнал </title>
+    {% endif %}
+
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="{% static 'journal/bootstrap.min.css' %}" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'journal/main.css' %}">
+    <!-- Scrollbar Custom CSS -->
+    <link rel="stylesheet" href="{% static 'journal/jquery.mCustomScrollbar.min.css' %}">
+    <link rel="stylesheet" href="css/animate.css">
+
+    <!-- Font Awesome JS -->
+    <script defer type="text/javascript" src="{% static 'journal/solid.js' %}" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+    <script defer type="text/javascript" src="{% static 'journal/fontawesome.js' %}" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar" class="mCustomScrollbar _mCS_1 mCS-autoHide mCS_no_scrollbar active">
+            <div class="sidebar-header">
+                <h3>Дополнительные опции</h3>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="{% url 'client-create' %}">Создать заявку</a>
+                </li>
+                <li>
+                    <a href="{% url 'journal' %}">Журнал</a>
+                </li>
+                <li>
+                    <a href="{% url 'journal-home' %}">Активные заявки</a>
+                </li>
+                <li class="active">
+                    <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Профиль</a>
+                  <ul class="collapse list-unstyled" id="pageSubmenu">
+                    {% if user.is_authenticated %}
+                        <li>
+                          <a href="{% url 'profile' %}">{{user.username}}</a>
+                        </li>
+                        {% if user.is_superuser %}
+                            <li>
+                            <a href="{% url 'register' %}">Новый пользователь</a>
+                            </li>
+                        {% endif %}
+                        <li>
+                          <a href="{% url 'logout' %}">Выйти</a>
+                        </li>
+                    {% else %}
+                        <li>
+                          <a href="{% url 'login' %}">Войти</a>
+                        </li>
+                    {% endif %}
+                  </ul>
+                </li>
+
+
+            </ul>
+
+            <ul style="line-height: 0.2; margin-left: 5px;" class="list-unstyled components">
+                <div class="sidebar-header">
+                    <h3>Поиск</h3>
+                </div>
+                    <form method="GET" action="{% url 'search' %}">
+                      <div class="form-row">
+                          <div class="form-group col-12">
+                              <div class="input-group">
+                                  <input style="line-height: 1" class="form-control py-2 border-right-0 border" type="search" placeholder="Номер заявки..." name="search_exact"/>
+                                  <span class="input-group-append">
+                                      <div class="input-group-text bg-transparent">
+                                          <i class="fa fa-search"></i>
+                                      </div>
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="form-row">
+                          <div class="form-group col-12">
+                              <div class="input-group">
+                                  <input style="line-height: 1" class="form-control py-2 border-right-0 border" type="search" placeholder="ФИО клиента..." name="search_contains"/>
+                                  <span class="input-group-append">
+                                      <div class="input-group-text bg-transparent">
+                                          <i class="fa fa-search"></i>
+                                      </div>
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div class="form-row">
+                        <div class="form-group col-md-auto">
+                          <label for="sumCountMin">Сумма от и до</label>
+                          <input type="number" min="0" class="form-control" id="sumCountMin" placeholder="0" name="sum_Count_Min">
+                        </div>
+                        <div class="form-group col-md-auto">
+                          <input type="number" min="0" class="form-control" id="sumCountMax" placeholder="10000000" name="sum_Count_Max">
+                        </div>
+                      </div>
+                      <div class="form-row">
+                        <div class="form-group col-md-auto">
+                          <label for="publishDateMin">Дата от и до</label>
+                          <input type="date" class="form-control" id="publishDateMin" name="date_min">
+                        </div>
+                        <div class="form-group col-md-auto">
+                          <input type="date" class="form-control" id="publishDateMax" name="date_max">
+                        </div>
+                      </div>
+                      <div class="form-row">
+                        <div class="form-group col-md-auto">
+                          <label for="inputState">Продукт</label>
+                          <select id="inputState" class="form-control" name="product">
+                            <option selected>Выберите продукт...</option>
+                              {% for product in products %}
+                            <option value="{{product}}">{{ product.product_name }}</option>
+                              {% endfor %}
+                          </select>
+                        </div>
+                      </div>
+                      <button type="submit" style="margin-left: 60px; padding-left: 30px; padding-right: 30px;" class="btn btn-light">Поиск</button>
+                    </form>
+            </ul>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content" class="active">
+            <!-- top navbar  -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-align-left"></i>
+                        <span>Меню</span>
+                    </button>
+                    <button class="btn btn-dark d-inline-block d-lg-none ml-auto" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="fas fa-align-justify"></i>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <h2 class="mydiv">
+                            {{ title }}
+                        </h2>
+                        <ul class="nav navbar-nav ml-auto">
+                            <li class="nav-item active">
+                                <a class="nav-link" href="#"></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"></a>
+                            </li>
+                            <li class="nav-item">
+                                {% if user.is_authenticated %}
+                                <a class="nav-link" href="{% url 'profile' %}">{{user.username}}</a>
+                                {% else %}
+                                <a class="nav-link" href="{% url 'login' %}">Войти</a>
+                                {% endif %}
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <!-- messages  -->
+            <main>
+                <div>
+                  <div>
+                    {% if messages %}
+                      {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                          {{ message }}
+                        </div>
+                      {% endfor %}
+                    {% endif %}
+                    {% block content %}{% endblock %}
+                  </div>
+                </div>
+            </main>
+            </div>
+    </div>
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script type="text/javascript" src="{% static 'journal/jquery-3.3.1.slim.min.js' %}" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <!-- Popper.JS -->
+    <script type="text/javascript" src="{% static 'journal/popper.min.js' %}" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script type="text/javascript" src="{% static 'journal/bootstrap.min.js' %}" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+    <!-- jQuery Custom Scroller CDN -->
+    <script type="text/javascript" src="{% static 'journal/jquery.mCustomScrollbar.concat.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'journal/1f5e4d9175.js' %}" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#sidebar").mCustomScrollbar({
+                theme: "minimal"
+            });
+
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar, #content').toggleClass('active');
+                $('.collapse.in').toggleClass('in');
+                $('a[aria-expanded=true]').attr('aria-expanded', 'false');
+            });
+        });
+    </script>
+</body>
+
+</html>
+

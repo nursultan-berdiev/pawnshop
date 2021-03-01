@@ -1,0 +1,68 @@
+{% extends "journal/base.html" %}
+{% block content %}
+<div class="moycontent">
+<table class="table table-bordered" id="table">
+    <tr>
+        <th scope="col">Номер заявки</th>
+        <td>{{ client.nomer_zayavki }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Дата заявки</th>
+        <td>{{ client.date_posted|date:"d.m.Y" }}</td>
+    </tr>
+    <tr>
+        <th scope="col">ФИО клиента/Наименование организации</th>
+        <td>{{ client.fio_klienta }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Сумма заявки</th>
+        <td>{{ client.summa_zayavki }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Цель кредита</th>
+        <td>{{ client.purpose }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Срок кредита</th>
+        <td>{{ client.srok_kredita }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Наименование продукта</th>
+        <td>{{ client.product }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Обеспечение</th>
+        <td>{{ client.zalog }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Статус</th>
+        <td>{{ client.status }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Источник погашения</th>
+        <td>{{ client.istochnik }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Причина отказа\одобрения</th>
+        <td>{{ client.reason }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Дата отказа/одобрения</th>
+        <td>{{ client.date_refuse|date:"d.m.Y" }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Номер протокола</th>
+        <td>{{ client.protokol_number }}</td>
+    </tr>
+    <tr>
+        <th scope="col">Кредитный эксперт</th>
+        <td>{{ client.credit_user }}</td>
+    </tr>
+</table>
+<div>
+    <a style="font-size: 110%" class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'client-update' object.id %}">Изменить</a>
+    <a style="font-size: 110%" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'client-delete' object.id %}">Удалить</a>
+    <a style="font-size: 110%; float:right" class="btn btn-success btn-sm mt-1 mb-1" href="{% url 'excel-report' object.id %}">Ключевой Лист</a>
+</div>
+</div>
+{% endblock content %}
