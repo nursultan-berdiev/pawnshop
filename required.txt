@@ -4,6 +4,7 @@ Django==2.1.5
 django-crispy-forms==1.7.2
 django-search-views==0.3.7
 django-static-fontawesome==5.14.0.0
+django-widget-tweaks==1.4.8
 docutils==0.15.2
 et-xmlfile==1.0.1
 idna==2.7

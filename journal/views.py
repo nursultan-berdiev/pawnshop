@@ -3,12 +3,15 @@ from django.http import HttpResponse
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from users.models import name_user
-from .models import Client, Product
+from .models import Client, Zalog, Loan
 from django.shortcuts import render, get_object_or_404
 from openpyxl import *
 from openpyxl.writer.excel import save_virtual_workbook
 from transliterate import translit, get_available_language_codes
 from datetime import datetime, timedelta
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from .forms import LoanForm
 
 
 def is_valid_queryparam(param):
@@ -16,44 +19,38 @@ def is_valid_queryparam(param):
 
 
 def base_list(request):
-    query = Product.objects.all()
+    query = Zalog.objects.all()
     context = {
         'query': query
     }
     return context
 
 
-class ClientListView(ListView):
-    model = Client
-    template_name = 'journal/journal.html'
-    context_object_name = 'clients'
-    ordering = ['-nomer_zayavki']
-    paginate_by = 10
+def loan_list(request):
+    loans = Loan.objects.all()
+    return render(request, 'journal/journal.html', {'loans': loans})
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(ClientListView, self).get_context_data(**kwargs)
-        context['title'] = 'Журнал Кредитного Специалиста'
-        context['products'] = Product.objects.all()
-        return context
+
+def dashboard(request):
+    return render(request, 'journal/dashboard.html')
 
 
 class ActiveListView(ListView):
-    queryset = Client.objects.filter(status = 'На рассмотрении')
+    queryset = Client.objects.all()
     template_name = 'journal/home.html'
     context_object_name = 'clients'
-    ordering = ['-nomer_zayavki']
     paginate_by = 10
 
     def get_context_data(self, *args, **kwargs):
         context = super(ActiveListView, self).get_context_data(**kwargs)
         context['title'] = 'Активные заявки'
-        context['products'] = Product.objects.all()
+        context['products'] = Zalog.objects.all()
         return context
 
 
 def SearchFilterView(request):
     query_set = Client.objects.all()
-    products = Product.objects.all()
+    products = Zalog.objects.all()
     search_contains_query = request.GET.get('search_contains')
     search_exact_query = request.GET.get('search_exact')
     sum_Count_Min = request.GET.get('sum_Count_Min')
@@ -99,8 +96,8 @@ def SearchFilterView(request):
     return render(request, 'journal/search_form.html', context)
 
 
-class ClientDetailView(DetailView):
-    model = Client
+class LoanDetailView(DetailView):
+    model = Loan
 
     def test(self):
         user = self.get_object().credit_user
@@ -111,9 +108,9 @@ class ClientDetailView(DetailView):
         return False
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ClientDetailView, self).get_context_data(**kwargs)
+        context = super(LoanDetailView, self).get_context_data(**kwargs)
         context['title'] = 'Подробно'
-        context['products'] = Product.objects.all()
+        context['products'] = Zalog.objects.all()
         return context
 
 
@@ -185,67 +182,50 @@ def excel_report(request, pk):
     return response
 
 
-class ClientCreateView(CreateView):
-    model = Client
-    fields = ['nomer_zayavki',
-              'fio_klienta',
-              'summa_zayavki',
-              'purpose',
-              'srok_kredita',
-              'product',
-              'zalog',
-              'status',
-              'istochnik',
-              'reason',
-              'date_refuse',
-              'protokol_number',
-              'credit_user']
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(ClientCreateView, self).get_context_data(**kwargs)
-        context['title'] = 'Создание заявки'
-        context['products'] = Product.objects.all()
-        return context
+def createLoanView(request):
+    form = LoanForm()
+    title = 'Новая заявка'
+    context = {
+        'form': form,
+        'title': title
+    }
+    html_form = render_to_string('journal/loan_form.html', context, request=request)
+    return JsonResponse({'html_form': html_form})
 
 
-class ClientUpdateView(UserPassesTestMixin, UpdateView):
-    model = Client
-    fields = ['fio_klienta',
-              'summa_zayavki',
-              'purpose',
-              'srok_kredita',
-              'product',
-              'zalog',
-              'status',
-              'istochnik',
-              'reason',
-              'date_refuse',
-              'protokol_number',
-              'credit_user']
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(ClientUpdateView, self).get_context_data(**kwargs)
-        context['title'] = 'Измнение заявки'
-        context['products'] = Product.objects.all()
-        return context
-
-    def test_func(self):
-        user = self.get_object().credit_user
-        username = name_user(user)
-
-        if self.request.user == username:
-            return True
-        return False
+def update_loan(request, pk):
+    loan = get_object_or_404(Loan, pk=pk)
+    if request.method == 'POST':
+        form = LoanForm(request.POST, instance=loan)
+    else:
+        form = LoanForm(instance=loan)
+    return save_loan_form(request, form, 'journal/loan_form.html')
 
 
-class ClientDeleteView(UserPassesTestMixin, DeleteView):
+#
+# def save_loan_form(request, form, template_name):
+#     data = dict()
+#     if request.method == 'POST':
+#         if form.is_valid():
+#             form.save()
+#             data['form_is_valid'] = True
+#             loans = Loan.objects.all()
+#             data['html_loan_list'] = render_to_string('journal/loan_form.html', {'loans': loans})
+#         else:
+#             data['form_is_valid'] = False
+#     context = {'form': form}
+#     data['html_form'] = render_to_string(template_name, context, request)
+#     return JsonResponse(data)
+
+
+class LoanDeleteView(UserPassesTestMixin, DeleteView):
     model = Client
     success_url = '/'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ClientDeleteView, self).get_context_data(**kwargs)
+        context = super(LoanDeleteView, self).get_context_data(**kwargs)
         context['title'] = 'Удаление заявки'
-        context['products'] = Product.objects.all()
+        context['products'] = Zalog.objects.all()
         return context
 
     def test_func(self):
@@ -346,3 +326,26 @@ def my_view(request):
     book.close()
 
     return response
+
+
+def loan_create(request):
+    if request.method == 'POST':
+        form = LoanForm(request.POST)
+    else:
+        form = LoanForm()
+    return save_loan_form(request, form, 'journal/loan_form.html')
+
+
+def save_loan_form(request, form, template_name):
+    data = dict()
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            data['form_is_valid'] = True
+            loans = Loan.objects.all()
+            data['html_loan_list'] = render_to_string('journal/journal.html', {'loans': loans})
+        else:
+            data['form_is_valid'] = False
+    context = {'form': form}
+    data['html_form'] = render_to_string(template_name, context, request=request)
+    return JsonResponse(data)
