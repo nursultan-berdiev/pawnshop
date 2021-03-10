@@ -1,51 +1,119 @@
-import xlsxwriter
-from django.http import HttpResponse
+from datetime import timedelta
+from users.models import Officer
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from users.models import name_user
-from .models import Client, Zalog, Loan
+from django.contrib.auth.models import User
+from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
+from django.template.loader import render_to_string
+from django.views.generic import DetailView, DeleteView, UpdateView
 from openpyxl import *
 from openpyxl.writer.excel import save_virtual_workbook
-from transliterate import translit, get_available_language_codes
-from datetime import datetime, timedelta
-from django.http import JsonResponse
-from django.template.loader import render_to_string
-from .forms import LoanForm
+from transliterate import translit
+from .forms import ProductForm, EarlyRepaymentForm
+from .models import Product, Zalog_types, PrihodRashod, WorkDays
+from users.models import name_user
+from django.utils import timezone
+from datetime import datetime
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.core.exceptions import ObjectDoesNotExist
 
 
 def is_valid_queryparam(param):
     return param != '' and param is not None
 
 
-def base_list(request):
-    query = Zalog.objects.all()
-    context = {
-        'query': query
-    }
-    return context
-
-
-def loan_list(request):
-    loans = Loan.objects.all()
-    return render(request, 'journal/journal.html', {'loans': loans})
-
-
-def dashboard(request):
+def index(request):
     return render(request, 'journal/dashboard.html')
 
 
-class ActiveListView(ListView):
-    queryset = Client.objects.all()
-    template_name = 'journal/home.html'
-    context_object_name = 'clients'
-    paginate_by = 10
+def product_list(request):
+    products = Product.objects.all()
+    return render(request, 'product_list.html', {'products': products})
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(ActiveListView, self).get_context_data(**kwargs)
-        context['title'] = 'Активные заявки'
-        context['products'] = Zalog.objects.all()
-        return context
+
+# def save_product_form(request, form, template_name, title):
+#     data = dict()
+#     title = title
+#     if request.method == 'POST':
+#         if form.is_valid():
+#             form.save()
+#             data['form_is_valid'] = True
+#             products = Product.objects.all()
+#             data['html_product_list'] = render_to_string('includes/partial_product_list.html', {
+#                 'products': products
+#             })
+#         else:
+#             data['form_is_valid'] = False
+#     context = {'form': form,
+#                'title': title}
+#     data['html_form'] = render_to_string(template_name, context, request=request)
+#     return JsonResponse(data)
+
+
+def save_product_form(request, form, template_name, title):
+    user = request.user
+    data = dict()
+    title = title
+    if request.method == 'POST':
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.credit_user = Officer.objects.get(user=user)
+            summa_zayavki = int(form.cleaned_data['summa_zayavki'])
+            stavka_day = float(form.cleaned_data['stavka_day'])
+            srok_kredita = int(form.cleaned_data['srok_kredita'])
+            fio_klienta = form.cleaned_data['fio_klienta']
+            date_posted = form.cleaned_data['date_posted']
+            obj.ostatok = form.cleaned_data['summa_zayavki']
+
+            obj.stavka_period = summa_zayavki * stavka_day / 100 * srok_kredita
+            obj.date_plan_pay = date_posted + timezone.timedelta(days=srok_kredita)
+            obj.fact_loan_day = 0
+            obj.fact_day = 0
+
+            obj.save()
+
+            prihod_rashod = PrihodRashod(summa = summa_zayavki,
+                                         type='Расход',
+                                         date=date_posted,
+                                         product=obj,
+                                         comment='Выдача займа {} на сумму {} сом'.format(fio_klienta, summa_zayavki))
+            prihod_rashod.save()
+
+            data['form_is_valid'] = True
+            products = Product.objects.all()
+            data['html_product_list'] = render_to_string('includes/partial_product_list.html', {
+                'products': products
+            })
+        else:
+            data['form_is_valid'] = False
+    context = {'form': form,
+               'title': title}
+    data['html_form'] = render_to_string(template_name, context, request=request)
+    return JsonResponse(data)
+
+
+def product_create(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+    else:
+        form = ProductForm()
+    title = 'Выдача займа'
+    return save_product_form(request, form, 'includes/partial_product_create.html', title)
+
+
+# class ActiveListView(ListView):
+#     queryset = Client.objects.all()
+#     template_name = 'journal/home.html'
+#     context_object_name = 'clients'
+#     paginate_by = 10
+#
+#     def get_context_data(self, *args, **kwargs):
+#         context = super(ActiveListView, self).get_context_data(**kwargs)
+#         context['title'] = 'Активные заявки'
+#         context['products'] = Zalog.objects.all()
+#         return context
 
 
 def SearchFilterView(request):
@@ -96,8 +164,8 @@ def SearchFilterView(request):
     return render(request, 'journal/search_form.html', context)
 
 
-class LoanDetailView(DetailView):
-    model = Loan
+class ProductDetailView(DetailView):
+    model = Product
 
     def test(self):
         user = self.get_object().credit_user
@@ -108,9 +176,9 @@ class LoanDetailView(DetailView):
         return False
 
     def get_context_data(self, *args, **kwargs):
-        context = super(LoanDetailView, self).get_context_data(**kwargs)
+        context = super(ProductDetailView, self).get_context_data(**kwargs)
         context['title'] = 'Подробно'
-        context['products'] = Zalog.objects.all()
+        context['products'] = Zalog_types.objects.all()
         return context
 
 
@@ -182,50 +250,14 @@ def excel_report(request, pk):
     return response
 
 
-def createLoanView(request):
-    form = LoanForm()
-    title = 'Новая заявка'
-    context = {
-        'form': form,
-        'title': title
-    }
-    html_form = render_to_string('journal/loan_form.html', context, request=request)
-    return JsonResponse({'html_form': html_form})
-
-
-def update_loan(request, pk):
-    loan = get_object_or_404(Loan, pk=pk)
-    if request.method == 'POST':
-        form = LoanForm(request.POST, instance=loan)
-    else:
-        form = LoanForm(instance=loan)
-    return save_loan_form(request, form, 'journal/loan_form.html')
-
-
-#
-# def save_loan_form(request, form, template_name):
-#     data = dict()
-#     if request.method == 'POST':
-#         if form.is_valid():
-#             form.save()
-#             data['form_is_valid'] = True
-#             loans = Loan.objects.all()
-#             data['html_loan_list'] = render_to_string('journal/loan_form.html', {'loans': loans})
-#         else:
-#             data['form_is_valid'] = False
-#     context = {'form': form}
-#     data['html_form'] = render_to_string(template_name, context, request)
-#     return JsonResponse(data)
-
-
-class LoanDeleteView(UserPassesTestMixin, DeleteView):
-    model = Client
-    success_url = '/'
+class ProductDeleteView(UserPassesTestMixin, DeleteView):
+    model = Product
+    success_url = '/products'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(LoanDeleteView, self).get_context_data(**kwargs)
+        context = super(ProductDeleteView, self).get_context_data(**kwargs)
         context['title'] = 'Удаление заявки'
-        context['products'] = Zalog.objects.all()
+        context['products'] = Zalog_types.objects.all()
         return context
 
     def test_func(self):
@@ -237,115 +269,202 @@ class LoanDeleteView(UserPassesTestMixin, DeleteView):
         return False
 
 
-def my_view(request):
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = "attachment; filename=UKJournal.xlsx"
-    context = {
-        'in_memory': True,
-        'remove_timezone': True
-    }
-    background = '#ebfcff'
-    border = 1
+class ProductUpdateView(UserPassesTestMixin, UpdateView):
+    model = Product
+    fields = ['date_posted',
+              'nomer_bileta',
+              'fio_klienta',
+              'summa_zayavki',
+              'status',
+              'stavka_day',
+              'srok_kredita',
+              'comment',
+              'credit_user']
 
-    def add_custom_format(format):
-        format.set_bg_color(background)
-        format.set_border(border)
-        format.set_bold()
+    def get_context_data(self, *args, **kwargs):
+        context = super(ProductUpdateView, self).get_context_data(**kwargs)
+        context['title'] = 'Измнение заявки'
+        context['products'] = Product.objects.all()
+        return context
 
-        return format
+    def test_func(self):
+        user = self.get_object().credit_user
+        username = name_user(user)
 
-    book = xlsxwriter.Workbook(response, context)
-    sheet = book.add_worksheet('Журнал Кредитного Эксперта')
-    sheet.set_column(0, 0, 6)
-    sheet.set_column(1, 1, 12)
-    sheet.set_column(2, 2, 35)
-    sheet.set_column(3, 3, 13)
-    sheet.set_column(4, 4, 16)
-    sheet.set_column(5, 5, 12)
-    sheet.set_column(6, 6, 22)
-    sheet.set_column(7, 7, 16)
-    sheet.set_column(8, 8, 16)
-    sheet.set_column(9, 9, 19)
-    sheet.set_column(10, 10, 30)
-    sheet.set_column(11, 11, 20)
-    sheet.set_column(12, 12, 16)
-    sheet.set_column(13, 13, 20)
-    sheet.set_zoom(80)
-
-    number_format = book.add_format({'num_format': '№#####0'})
-    add_custom_format(number_format)
-
-    month_format = book.add_format({'num_format': '##0 мес'})
-    add_custom_format(month_format)
-
-    money_format = book.add_format({'num_format': '#,###,##0 сом'})
-    add_custom_format(money_format)
-
-    date_format = book.add_format({'num_format': 'dd.mm.yyyy'})
-    add_custom_format(date_format)
-
-    style_format = book.add_format()
-    add_custom_format(style_format)
-
-    col = 0
-    row = 0
-    sheet.write(0, col, Client._meta.get_field("nomer_zayavki").verbose_name, style_format)
-    sheet.write(row, col + 1, Client._meta.get_field("date_posted").verbose_name, style_format)
-    sheet.write(row, col + 2, Client._meta.get_field("fio_klienta").verbose_name, style_format)
-    sheet.write(row, col + 3, Client._meta.get_field("summa_zayavki").verbose_name, style_format)
-    sheet.write(row, col + 4, Client._meta.get_field("purpose").verbose_name, style_format)
-    sheet.write(row, col + 5, Client._meta.get_field("srok_kredita").verbose_name, style_format)
-    sheet.write(row, col + 6, Client._meta.get_field("product").verbose_name, style_format)
-    sheet.write(row, col + 7, Client._meta.get_field("zalog").verbose_name, style_format)
-    sheet.write(row, col + 8, Client._meta.get_field("status").verbose_name, style_format)
-    sheet.write(row, col + 9, Client._meta.get_field("istochnik").verbose_name, style_format)
-    sheet.write(row, col + 10, Client._meta.get_field("reason").verbose_name, style_format)
-    sheet.write(row, col + 11, Client._meta.get_field("date_refuse").verbose_name, style_format)
-    sheet.write(row, col + 12, Client._meta.get_field("protokol_number").verbose_name, style_format)
-    sheet.write(row, col + 13, Client._meta.get_field("credit_user").verbose_name, style_format)
-    row = 1
-    col = 0
-    excel_list = request.session['excel_list']
-    for a in excel_list:
-        queryset = Client.objects.get(id=int(a))
-        sheet.write(row, col, queryset.nomer_zayavki, number_format)
-        sheet.write(row, col + 1, queryset.date_posted, date_format)
-        sheet.write(row, col + 2, queryset.fio_klienta, style_format)
-        sheet.write(row, col + 3, queryset.summa_zayavki, money_format)
-        sheet.write(row, col + 4, queryset.purpose, style_format)
-        sheet.write(row, col + 5, queryset.srok_kredita, month_format)
-        sheet.write(row, col + 6, queryset.product.product_name, style_format)
-        sheet.write(row, col + 7, queryset.zalog, style_format)
-        sheet.write(row, col + 8, queryset.status, style_format)
-        sheet.write(row, col + 9, queryset.istochnik, style_format)
-        sheet.write(row, col + 10, queryset.reason, style_format)
-        sheet.write(row, col + 11, queryset.date_refuse, date_format)
-        sheet.write(row, col + 12, queryset.protokol_number, style_format)
-        sheet.write(row, col + 13, queryset.credit_user.name, style_format)
-        row = row + 1
-    book.close()
-
-    return response
+        if self.request.user == username:
+            return True
+        return False
 
 
-def loan_create(request):
-    if request.method == 'POST':
-        form = LoanForm(request.POST)
-    else:
-        form = LoanForm()
-    return save_loan_form(request, form, 'journal/loan_form.html')
+# def my_view(request):
+#     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+#     response['Content-Disposition'] = "attachment; filename=UKJournal.xlsx"
+#     context = {
+#         'in_memory': True,
+#         'remove_timezone': True
+#     }
+#     background = '#ebfcff'
+#     border = 1
+#
+#     def add_custom_format(format):
+#         format.set_bg_color(background)
+#         format.set_border(border)
+#         format.set_bold()
+#
+#         return format
+#
+#     book = xlsxwriter.Workbook(response, context)
+#     sheet = book.add_worksheet('Журнал Кредитного Эксперта')
+#     sheet.set_column(0, 0, 6)
+#     sheet.set_column(1, 1, 12)
+#     sheet.set_column(2, 2, 35)
+#     sheet.set_column(3, 3, 13)
+#     sheet.set_column(4, 4, 16)
+#     sheet.set_column(5, 5, 12)
+#     sheet.set_column(6, 6, 22)
+#     sheet.set_column(7, 7, 16)
+#     sheet.set_column(8, 8, 16)
+#     sheet.set_column(9, 9, 19)
+#     sheet.set_column(10, 10, 30)
+#     sheet.set_column(11, 11, 20)
+#     sheet.set_column(12, 12, 16)
+#     sheet.set_column(13, 13, 20)
+#     sheet.set_zoom(80)
+#
+#     number_format = book.add_format({'num_format': '№#####0'})
+#     add_custom_format(number_format)
+#
+#     month_format = book.add_format({'num_format': '##0 мес'})
+#     add_custom_format(month_format)
+#
+#     money_format = book.add_format({'num_format': '#,###,##0 сом'})
+#     add_custom_format(money_format)
+#
+#     date_format = book.add_format({'num_format': 'dd.mm.yyyy'})
+#     add_custom_format(date_format)
+#
+#     style_format = book.add_format()
+#     add_custom_format(style_format)
+#
+#     col = 0
+#     row = 0
+#     sheet.write(0, col, Client._meta.get_field("nomer_zayavki").verbose_name, style_format)
+#     sheet.write(row, col + 1, Client._meta.get_field("date_posted").verbose_name, style_format)
+#     sheet.write(row, col + 2, Client._meta.get_field("fio_klienta").verbose_name, style_format)
+#     sheet.write(row, col + 3, Client._meta.get_field("summa_zayavki").verbose_name, style_format)
+#     sheet.write(row, col + 4, Client._meta.get_field("purpose").verbose_name, style_format)
+#     sheet.write(row, col + 5, Client._meta.get_field("srok_kredita").verbose_name, style_format)
+#     sheet.write(row, col + 6, Client._meta.get_field("product").verbose_name, style_format)
+#     sheet.write(row, col + 7, Client._meta.get_field("zalog").verbose_name, style_format)
+#     sheet.write(row, col + 8, Client._meta.get_field("status").verbose_name, style_format)
+#     sheet.write(row, col + 9, Client._meta.get_field("istochnik").verbose_name, style_format)
+#     sheet.write(row, col + 10, Client._meta.get_field("reason").verbose_name, style_format)
+#     sheet.write(row, col + 11, Client._meta.get_field("date_refuse").verbose_name, style_format)
+#     sheet.write(row, col + 12, Client._meta.get_field("protokol_number").verbose_name, style_format)
+#     sheet.write(row, col + 13, Client._meta.get_field("credit_user").verbose_name, style_format)
+#     row = 1
+#     col = 0
+#     excel_list = request.session['excel_list']
+#     for a in excel_list:
+#         queryset = Client.objects.get(id=int(a))
+#         sheet.write(row, col, queryset.nomer_zayavki, number_format)
+#         sheet.write(row, col + 1, queryset.date_posted, date_format)
+#         sheet.write(row, col + 2, queryset.fio_klienta, style_format)
+#         sheet.write(row, col + 3, queryset.summa_zayavki, money_format)
+#         sheet.write(row, col + 4, queryset.purpose, style_format)
+#         sheet.write(row, col + 5, queryset.srok_kredita, month_format)
+#         sheet.write(row, col + 6, queryset.product.product_name, style_format)
+#         sheet.write(row, col + 7, queryset.zalog, style_format)
+#         sheet.write(row, col + 8, queryset.status, style_format)
+#         sheet.write(row, col + 9, queryset.istochnik, style_format)
+#         sheet.write(row, col + 10, queryset.reason, style_format)
+#         sheet.write(row, col + 11, queryset.date_refuse, date_format)
+#         sheet.write(row, col + 12, queryset.protokol_number, style_format)
+#         sheet.write(row, col + 13, queryset.credit_user.name, style_format)
+#         row = row + 1
+#     book.close()
+#
+#     return response
 
+def early_repayment(request, pk):
+    summ = float(request.GET.get('summ'))
+    try:
+        product = Product.objects.get(pk=pk)
+        new_summ = product.itogo_k_vyplate - summ
+        product.itogo_k_vyplate = new_summ
+        if new_summ == 0 or abs(new_summ) < 1:  # Если полное досрочное
+            product.ostatok = 0
+            product.fact_day = 0
+            product.itogo_k_vyplate = 0
+            product.date_fact_pay = timezone.now()
+            days = product.date_fact_pay - product.date_posted
+            product.fact_loan_day = days.days
+            product.status = 'Выкуп'
 
-def save_loan_form(request, form, template_name):
-    data = dict()
-    if request.method == 'POST':
-        if form.is_valid():
-            form.save()
-            data['form_is_valid'] = True
-            loans = Loan.objects.all()
-            data['html_loan_list'] = render_to_string('journal/journal.html', {'loans': loans})
+            product.save()
+
+            prihod_rashod = PrihodRashod(summa=summ,
+                                         type='Приход',
+                                         date=product.date_fact_pay,
+                                         product=product,
+                                         comment='Полное досрочное погашение {} на сумму {}'.format(product.fio_klienta, summ))
+            prihod_rashod.save()
+
+            messages.success(request, 'Успешно проведено досрочное погашение')
+        elif new_summ > 1:
+            if product.stavka_period < summ:
+                product.itogo_k_vyplate = product.itogo_k_vyplate - summ
+                summ = summ - product.stavka_period
+                product.fact_day = 0
+                product.ostatok = product.ostatok - summ
+
+                product.save()
+
+                prihod_rashod = PrihodRashod(summa=summ,
+                                             type='Приход',
+                                             date=timezone.now(),
+                                             product=product,
+                                             comment='Частично досрочное погашение {} на сумму {}'.format(
+                                                 product.fio_klienta, summ))
+                prihod_rashod.save()
+                messages.success(request, 'Успешно проведено частично-досрочное погашение')
+            else:
+                if product.fact_day > new_summ:
+                    product.itogo_k_vyplate = product.itogo_k_vyplate - summ
+                    product.fact_day = product.fact_day - summ
+                else:
+                    product.itogo_k_vyplate = product.itogo_k_vyplate - summ
+                    summ = summ - product.fact_day
+                    product.fact_day = 0
+                    product.ostatok - summ
+                product.save()
+                prihod_rashod = PrihodRashod(summa=summ,
+                                             type='Приход',
+                                             date=timezone.now(),
+                                             product=product,
+                                             comment='Частично досрочное погашение {} на сумму {}'.format(
+                                                 product.fio_klienta, summ))
+                prihod_rashod.save()
         else:
-            data['form_is_valid'] = False
-    context = {'form': form}
-    data['html_form'] = render_to_string(template_name, context, request=request)
-    return JsonResponse(data)
+            messages.warning(request, 'Сумма для досрочного погашение больше необходимой суммы')
+    except ObjectDoesNotExist:
+        messages.error(request, 'Займ не найден')
+    return redirect('product_detail', pk=product.pk)
+
+
+def new_day(request):
+    products = Product.objects.all()
+    calc_proc = 0
+    today = WorkDays.objects.all().order_by('-day')[0]
+    next_day = today.day + timezone.timedelta(days=1)
+    for product in products:
+        if product.status != 'Выкуп' or product.status != 'Реализован':
+            product.fact_day = product.fact_day + product.expected_stavka_day
+            calc_proc += product.expected_stavka_day
+            product.fact_loan_day += 1
+            product.save()
+    workday = WorkDays(day=next_day, is_calculated=True, calc_sum=calc_proc)
+    workday.save()
+    messages.success(request, 'Начисление процентов осуществлено успешно')
+    return redirect('product_list')
+

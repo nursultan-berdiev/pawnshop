@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from users import views as user_views
 from django.contrib.auth import views as auth_views
-from journal.views import SearchFilterView, my_view
+from journal.views import SearchFilterView
 
 
 urlpatterns = [
@@ -23,5 +23,4 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
          name='password_reset_complete'),
     path('search-result/', SearchFilterView, name='search'),
-    path('search-result/myview/', my_view, name='test'),
 ]

@@ -1,68 +1,98 @@
 {% extends "journal/base.html" %}
+{% load verbose_tags %}
 {% block content %}
-<div class="moycontent">
-<table class="table table-bordered" id="table">
-    <tr>
-        <th scope="col">Номер заявки</th>
-        <td>{{ client.nomer_zayavki }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Дата заявки</th>
-        <td>{{ client.date_posted|date:"d.m.Y" }}</td>
-    </tr>
-    <tr>
-        <th scope="col">ФИО клиента/Наименование организации</th>
-        <td>{{ client.fio_klienta }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Сумма заявки</th>
-        <td>{{ client.summa_zayavki }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Цель кредита</th>
-        <td>{{ client.purpose }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Срок кредита</th>
-        <td>{{ client.srok_kredita }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Наименование продукта</th>
-        <td>{{ client.product }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Обеспечение</th>
-        <td>{{ client.zalog }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Статус</th>
-        <td>{{ client.status }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Источник погашения</th>
-        <td>{{ client.istochnik }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Причина отказа\одобрения</th>
-        <td>{{ client.reason }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Дата отказа/одобрения</th>
-        <td>{{ client.date_refuse|date:"d.m.Y" }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Номер протокола</th>
-        <td>{{ client.protokol_number }}</td>
-    </tr>
-    <tr>
-        <th scope="col">Кредитный эксперт</th>
-        <td>{{ client.credit_user }}</td>
-    </tr>
-</table>
-<div>
-    <a style="font-size: 110%" class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'client-update' object.id %}">Изменить</a>
-    <a style="font-size: 110%" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'client-delete' object.id %}">Удалить</a>
-    <a style="font-size: 110%; float:right" class="btn btn-success btn-sm mt-1 mb-1" href="{% url 'excel-report' object.id %}">Ключевой Лист</a>
-</div>
-</div>
+
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                  Погашение
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form method="GET" action="{% url 'early_repayment' product.pk %}">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Досрочное погашение</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                              <table class="table">
+                                  <thead>
+                                    <tr>
+                                      <th scope="col">{% get_verbose_name object 'itogo_k_vyplate' %}</th>
+                                      <th scope="col">{{ product.itogo_k_vyplate }}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'ostatok' %}</td>
+                                      <td>{{ product.ostatok }}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'fact_day' %}</td>
+                                      <td>{{ product.fact_day }}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'stavka_period' %}</td>
+                                      <td>{{ product.stavka_period }}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                              <div class="form-group col-12">
+                                <label for="summInput">Введите сумму для досрочного платежа</label>
+                                <input type="number" class="form-control" id="summInput" name="summ" step=".01" min="0">
+                                <small id="emailHelp" class="form-text text-muted">Какой то текст</small>
+                              </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                            <button type="submit" class="btn btn-primary" >Провести</button>
+                          </div>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+            <div class="table-responsive table mt-2" role="grid" aria-describedby="dataTable_info">
+
+                    <table class="table table-bordered" id="table">
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'nomer_bileta' %}</th>
+                            <td>{{ product.nomer_bileta }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'date_posted' %}</th>
+                            <td>{{ product.date_posted }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'fio_klienta' %}</th>
+                            <td>{{ product.fio_klienta }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'summa_zayavki' %}</th>
+                            <td>{{ product.summa_zayavki }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'status' %}</th>
+                            <td>{{ product.status }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'stavka_day' %}</th>
+                            <td>{{ product.stavka_day }}</td>
+                        </tr>
+                    </table>
+                <div>
+                    <a style="font-size: 110%" class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'product_update' object.pk %}">Изменить</a>
+                    <a style="font-size: 110%" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'product_delete' object.pk %}">Удалить</a>
+                    <a style="font-size: 110%; float:right" class="btn btn-success btn-sm mt-1 mb-1" href="{% url 'excel-report' object.pk %}">Ключевой Лист</a>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
