@@ -1,4 +1,7 @@
 from datetime import timedelta
+from django.db import models
+from django.db.models import Sum, Func, F, Count
+from django.db.models.functions import TruncMonth
 from users.models import Officer
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
@@ -24,32 +27,66 @@ def is_valid_queryparam(param):
     return param != '' and param is not None
 
 
+class Month(Func):
+    function = 'EXTRACT'
+    template = '%(function)s(MONTH from %(expressions)s)'
+    output_field = models.IntegerField()
+
+
 def index(request):
-    return render(request, 'journal/dashboard.html')
+    products = Product.objects.values('credit_user').order_by('credit_user').annotate(total_summ=Sum('summa_zayavki'))
+    users = []
+    data = []
+    labels_bar = []
+    data_bar = []
+    iteration = 0
+    for product in products:
+        for key in product:
+            iteration += 1
+            if iteration % 2 == 0:
+                data.append(product[key])
+            else:
+                users.append(product[key])
+    labels = []
+    for i in users:
+        user = User.objects.get(id=i)
+        labels.append(Officer.objects.get(user=user).name)
+
+    bar = Product.objects.values(month=TruncMonth('date_posted')) \
+        .annotate(total_summ=Sum('summa_zayavki')) \
+        .order_by('date_posted')
+
+    for b in bar:
+        labels_bar.append(b['month'].strftime("%B %Y"))
+        data_bar.append(b['total_summ'])
+
+    status_list = []
+    count_status_list = []
+
+    product_count = Product.objects.count()
+    status = Product.objects.values('status').annotate(count=Count('status')).order_by('status')
+
+    for s in status:
+        s['count'] = int(s['count'] / product_count * 100)
+
+    prihod = PrihodRashod.objects.all().filter(date__month=WorkDays.objects.all().order_by('-day')[0].day.strftime("%m")).values('type').annotate(count=Sum('summa')).order_by('type')
+
+    context = {'labels': labels,
+               'data': data,
+               'bar': bar,
+               'labels_bar': labels_bar,
+               'data_bar': data_bar,
+               'status_list': status_list,
+               'count_status_list': count_status_list,
+               'status': status,
+               'prihod': prihod}
+
+    return render(request, 'journal/dashboard.html', context)
 
 
 def product_list(request):
     products = Product.objects.all()
     return render(request, 'product_list.html', {'products': products})
-
-
-# def save_product_form(request, form, template_name, title):
-#     data = dict()
-#     title = title
-#     if request.method == 'POST':
-#         if form.is_valid():
-#             form.save()
-#             data['form_is_valid'] = True
-#             products = Product.objects.all()
-#             data['html_product_list'] = render_to_string('includes/partial_product_list.html', {
-#                 'products': products
-#             })
-#         else:
-#             data['form_is_valid'] = False
-#     context = {'form': form,
-#                'title': title}
-#     data['html_form'] = render_to_string(template_name, context, request=request)
-#     return JsonResponse(data)
 
 
 def save_product_form(request, form, template_name, title):
@@ -68,13 +105,12 @@ def save_product_form(request, form, template_name, title):
             obj.ostatok = form.cleaned_data['summa_zayavki']
 
             obj.stavka_period = summa_zayavki * stavka_day / 100 * srok_kredita
-            obj.date_plan_pay = date_posted + timezone.timedelta(days=srok_kredita)
             obj.fact_loan_day = 0
             obj.fact_day = 0
 
             obj.save()
 
-            prihod_rashod = PrihodRashod(summa = summa_zayavki,
+            prihod_rashod = PrihodRashod(summa=summa_zayavki,
                                          type='Расход',
                                          date=date_posted,
                                          product=obj,
@@ -396,7 +432,7 @@ def early_repayment(request, pk):
             product.ostatok = 0
             product.fact_day = 0
             product.itogo_k_vyplate = 0
-            product.date_fact_pay = timezone.now()
+            product.date_fact_pay = timezone.now().date()
             days = product.date_fact_pay - product.date_posted
             product.fact_loan_day = days.days
             product.status = 'Выкуп'
@@ -407,7 +443,8 @@ def early_repayment(request, pk):
                                          type='Приход',
                                          date=product.date_fact_pay,
                                          product=product,
-                                         comment='Полное досрочное погашение {} на сумму {}'.format(product.fio_klienta, summ))
+                                         comment='Полное досрочное погашение {} на сумму {}'.format(product.fio_klienta,
+                                                                                                    summ))
             prihod_rashod.save()
 
             messages.success(request, 'Успешно проведено досрочное погашение')
@@ -468,3 +505,27 @@ def new_day(request):
     messages.success(request, 'Начисление процентов осуществлено успешно')
     return redirect('product_list')
 
+
+def prolongation(request, pk):
+    days = int(request.GET.get('days'))
+    try:
+        product = Product.objects.get(pk=pk)
+        product.srok_kredita = product.srok_kredita + days
+        product.status = 'Продлен'
+
+        product.save()
+
+        messages.success(request, 'Займ успешно продлен')
+    except ObjectDoesNotExist:
+        messages.error(request, 'Займ не найден')
+    return redirect('product_detail', pk=product.pk)
+
+# a = {type:doughnut,
+#      data:{labels:[Direct,Social,Referral,me],
+#            datasets:[{label:,backgroundColor:[#4e73df,#1cc88a,#36b9cc,#4eb9cc],
+#             borderColor:[#ffffff,#ffffff,#ffffff,#ffffff],
+#
+#             data:[40,15,30,15]}]},
+#             options:{maintainAspectRatio:false,
+#                      legend:{display:false},
+#                      title:{}}}

@@ -13,4 +13,5 @@ urlpatterns = [
     path('products/<int:pk>/', login_required(views.ProductDetailView.as_view()), name='product_detail'),
     path('products/<int:pk>/early_payment', login_required(views.early_repayment), name='early_repayment'),
     path('new_day/', login_required(views.new_day), name='new_day'),
+    path('products/<int:pk>/prolongation', login_required(views.prolongation), name='prolongation'),
 ]

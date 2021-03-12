@@ -70,10 +70,12 @@ class Product(models.Model):
             self.itogo_k_vyplate = self.ostatok + self.stavka_period
         elif self.stavka_period < self.fact_day:
             self.itogo_k_vyplate = self.ostatok + self.fact_day
-        else: self.itogo_k_vyplate = self.ostatok + self.fact_day
+        else:
+            self.itogo_k_vyplate = self.ostatok + self.fact_day
         self.expected_stavka_day = self.ostatok * self.stavka_day / 100
         if self.fact_day > self.stavka_period:
             self.status = 'Просрочен'
+        self.date_plan_pay = self.date_posted + timezone.timedelta(days=self.srok_kredita)
         super(Product, self).save(*args, **kwargs)
 
 

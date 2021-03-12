@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+{% load date_tags %}
 <html>
 
 <head>
@@ -13,13 +14,6 @@
 
 <body id="page-top">
     <div id="wrapper">
-{% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-      {{ message }}
-    </div>
-  {% endfor %}
-{% endif %}
         <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
             <div class="container-fluid d-flex flex-column p-0">
                 <a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
@@ -37,6 +31,13 @@
             </div>
         </nav>
         <div class="d-flex flex-column" id="content-wrapper">
+        {% if messages %}
+          {% for message in messages %}
+            <div id="alert" class="alert alert-{{ message.tags }} rounded-pill animate fade show">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
         <div id="content" class="another_flex">
             <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top">
                 <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
@@ -55,6 +56,9 @@
                         <a type="button" class="btn btn-primary btn-sm" href="{% url 'new_day' %}">
                           Перейти на след день
                         </a>
+                    </div>
+                    <div>
+                        <p>{% get_last_date %}</p>
                     </div>
                 <ul class="nav navbar-nav flex-nowrap ml-auto">
                     <li class="nav-item dropdown d-sm-none no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><i class="fas fa-search"></i></a>
@@ -232,6 +236,17 @@
 
         });
     </script>
+<script>
+            // Get alert element
+        let alert = document.querySelector("#alert");
+        // Create Bootstrap alert instance
+        let bsAlert = new bootstrap.Alert(alert);
+
+        // Dismiss time out
+        setTimeout(() => {
+          bsAlert.close();
+        }, 3000);
+</script>
 </body>
 
 </html>

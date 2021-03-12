@@ -562,3 +562,14 @@
 .another_flex {
     flex: 0 1 auto !important;
 }
+
+.alert {
+    position: absolute;
+    z-index: 10;
+    bottom: 5px;
+    left: 1%;
+}
+
+.pie {
+
+}
