@@ -1,0 +1,178 @@
+{% extends "journal/base.html" %}
+{% load verbose_tags %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-body">
+            <h5>Приходы и Расходы за период от {{date_min_prihod}} до {{date_max_prihod}}</h5>
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="card">
+                  <div class="card-body">
+                      <h5 class="card-title">Приход</h5>
+                      <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th scope="col">Дата</th>
+                              <th scope="col">Сумма транзакции</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                          {% for q in queryset %}
+                          {% if q.type == 'Приход' %}
+                            <tr>
+                              <th scope="row">{{q.date}}</th>
+                              <td>{{q.summa}} сом</td>
+                              <td><button type="button" class="btn btn-sm btn-info" data-toggle="popover" title="Коментарий" data-content="{{q.comment}}">Комментарий</button></td>
+                            </tr>
+                          {% endif %}
+                          {% endfor %}
+
+                          </tbody>
+                               <tfoot>
+                               {% for i in prihod_summ %}
+                               {% if i.type == 'Приход' %}
+                                  <tr>
+                                      <td><strong>Итого</strong></td>
+                                      <td><strong>{{i.total_summ}}</strong></td>
+                                  </tr>
+                               {% endif %}
+                               {% endfor %}
+                               </tfoot>
+                        </table>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="card">
+                  <div class="card-body">
+                      <h5 class="card-title">Расход</h5>
+                      <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th scope="col">Дата</th>
+                              <th scope="col">Сумма транзакции</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                          {% for q in queryset %}
+                          {% if q.type == 'Расход' %}
+                            <tr>
+                              <th scope="row">{{q.date}}</th>
+                              <td>{{q.summa}} сом</td>
+                              <td><button type="button" class="btn btn-sm btn-info" data-toggle="popover" title="Коментарий" data-content="{{q.comment}}">Комментарий</button></td>
+                            </tr>
+                          {% endif %}
+                          {% endfor %}
+                          </tbody>
+                               <tfoot>
+                               {% for i in prihod_summ %}
+                               {% if i.type == 'Расход' %}
+                                  <tr>
+                                      <td><strong>Итого</strong></td>
+                                      <td><strong>{{i.total_summ}}</strong></td>
+                                  </tr>
+                               {% endif %}
+                               {% endfor %}
+                               </tfoot>
+                        </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+      $('[data-toggle="popover"]').popover()
+    })
+</script>
+{% endblock %}
+
+<!--            <div class="table-responsive table mt-2 table-hover" role="grid" aria-describedby="dataTable_info">-->
+<!--                <table class="table my-0" id="product-table" style="font-size: 14px">-->
+<!--                  <thead>-->
+<!--                      <tr>-->
+<!--                          <th>Номер билета</th>-->
+<!--                          <th>Дата заявки</th>-->
+<!--                          <th>ФИО клиента</th>-->
+<!--                          <th>Сумма заявки</th>-->
+<!--                          <th>% ставка в день</th>-->
+<!--                          <th>Срок займа в днях</th>-->
+<!--                          <th>Дата окончания</th>-->
+<!--                          <th>Статус</th>-->
+<!--                          <th>Кредитный специалист</th>-->
+<!--                      </tr>-->
+<!--                  </thead>-->
+<!--                  {% for product in products %}-->
+<!--                  <tbody>-->
+<!--                  <tr style="cursor: pointer" onclick="location.href='{% url 'product_detail' product.pk %}'">-->
+<!--                    <td>{{ product.nomer_bileta }}</td>-->
+<!--                    <td>{{product.date_posted}}</td>-->
+<!--                    <td>{{product.fio_klienta}}</td>-->
+<!--                    <td>{{product.summa_zayavki}}</td>-->
+<!--                    <td>{{product.stavka_day}}</td>-->
+<!--                    <td>{{product.srok_kredita}}</td>-->
+<!--                    <td>{{product.date_plan_pay}}</td>-->
+<!--                    <td>{{product.status}}</td>-->
+<!--                    <td>{{product.credit_user}}</td>-->
+<!--                  </tr>-->
+<!--                  </tbody>-->
+<!--                  {% empty %}-->
+<!--                  <tr>-->
+<!--                    <td colspan="8" class="text-center bg-warning">Займов нет</td>-->
+<!--                  </tr>-->
+<!--                  {% endfor %}-->
+<!--                  <tfoot>-->
+<!--                      <tr>-->
+<!--                          <td><strong>Номер билета</strong></td>-->
+<!--                          <td><strong>Дата заявки</strong></td>-->
+<!--                          <td><strong>ФИО клиента</strong></td>-->
+<!--                          <td><strong>Сумма заявки</strong></td>-->
+<!--                          <td><strong>% ставка в день</strong></td>-->
+<!--                          <td><strong>Срок займа в днях</strong></td>-->
+<!--                          <td><strong>Дата окончания</strong></td>-->
+<!--                          <td><strong>Статус</strong></td>-->
+<!--                          <td><strong>Кредитный специалист</strong></td>-->
+<!--                      </tr>-->
+<!--                  </tfoot>-->
+
+<!--                </table>-->
+<!--            </div>-->
+<!--            <div class="row">-->
+<!--                <div class="col-md-6 align-self-center">-->
+<!--                    <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing 1 to 10 of 27</p>-->
+<!--                </div>-->
+<!--                <div class="col-md-6">-->
+<!--                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">-->
+<!--                        <ul class="pagination">-->
+<!--                              {% if products.has_previous %}-->
+<!--                                  <li class="page-item">-->
+<!--                                    <a class="page-link" href="?page=1" aria-label="Previous">-->
+<!--                                      <span aria-hidden="true">«</span>-->
+<!--                                    </a>-->
+<!--                                  </li>-->
+<!--                              {% else %}-->
+<!--                                  <li class="page-item disabled">-->
+<!--                                    <a class="page-link" href="?page=1" aria-label="Previous">-->
+<!--                                      <span aria-hidden="true">«</span>-->
+<!--                                    </a>-->
+<!--                                  </li>-->
+<!--                              {% endif %}-->
+<!--                              {% for num in products.paginator.page_range %}-->
+<!--                              {% if products.number == num %}-->
+<!--                                  <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>-->
+<!--                              {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}-->
+<!--                                  <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>-->
+<!--                              {% endif %}-->
+<!--                              {% endfor %}-->
+<!--                              {% if products.has_next %}-->
+<!--                                  <li class="page-item"><a class="page-link" href="?page={{products.paginator.num_pages}}" aria-label="Next"><span aria-hidden="true">»</span></a></li>-->
+<!--                              {% endif %}-->
+<!--                        </ul>-->
+<!--                    </nav>-->
+<!--                </div>-->
+<!--            </div>-->

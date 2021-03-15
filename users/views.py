@@ -11,7 +11,7 @@ def register(request):
             form.save()
             username = form.cleaned_data.get('username')
             messages.success(request, f'Аккаунт создан для {username}!')
-            return redirect('products')
+            return redirect('product_list')
     else:
         form = UserRegisterForm()
     context = {

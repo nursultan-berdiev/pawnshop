@@ -1,15 +1,28 @@
-{% for product in products %}
-  <tr style="cursor: pointer" onclick="location.href='{% url 'product_detail' product.pk %}'">
-    <td>{{ product.nomer_bileta }}</td>
-    <td>{{product.date_posted}}</td>
-    <td>{{product.fio_klienta}}</td>
-    <td>{{product.summa_zayavki}}</td>
-    <td>{{product.stavka_day}}</td>
-    <td>{{product.srok_kredita}}</td>
-    <td>{{product.status}}</td>
-  </tr>
-{% empty %}
-  <tr>
-    <td colspan="8" class="text-center bg-warning">No product</td>
-  </tr>
-{% endfor %}
+
+      {% for product in products %}
+
+      <tr style="cursor: pointer">
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{ product.nomer_bileta }}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.date_posted}}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.fio_klienta}}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.summa_zayavki}}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.stavka_day}}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.srok_kredita}}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.date_plan_pay}}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.status}}</td>
+        <td onclick="location.href='{% url 'product_detail' product.pk %}'">{{product.credit_user}}</td>
+        <td>
+            <button type="button" class="btn btn-sm btn-info" data-toggle="popover" title="Дополнительно"
+                    data-content="Залог - {{ product.zalog }}
+                    Комментарий - {{ product.comment }}">Инфо
+            </button>
+        </td>
+      </tr>
+
+
+      {% empty %}
+      <tr>
+        <td colspan="10" class="text-center bg-warning">Займов нет</td>
+      </tr>
+      {% endfor %}
+

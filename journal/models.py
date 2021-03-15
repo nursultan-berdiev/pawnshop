@@ -9,6 +9,7 @@ STATUS_CHOICES = (
     ('Продлен', 'Продлен'),
     ('Выкуп', 'Выкуп'),
     ('Реализован', 'Реализован'),
+    ('На продаже', 'На продаже'),
 )
 
 TRANSACTION_CHOICES = (
@@ -47,6 +48,7 @@ class Product(models.Model):
     stavka_day = models.FloatField(null=False, default=int(1), verbose_name='Процентная ставка в день')
     srok_kredita = models.IntegerField(null=False, verbose_name='Срок займа в днях')
     comment = models.TextField(null=True, blank=True, verbose_name='Дополнительные комментарии')
+    telephone_number = models.CharField(max_length=10, verbose_name='Номер телефона')
     credit_user = models.ForeignKey(Officer, on_delete=models.SET('Удаленный пользователь'),
                                     verbose_name='Кредитный специалист')
     ostatok = models.FloatField(null=True, blank=True, verbose_name='Остаток основной суммы')
@@ -60,7 +62,7 @@ class Product(models.Model):
     zalog = models.TextField(verbose_name='Наименование залога')
 
     def __str__(self):
-        return str(self.nomer_bileta)
+        return 'Номер билета {} клиент {}'.format(self.nomer_bileta, self.fio_klienta)
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'pk': self.pk})
@@ -73,7 +75,7 @@ class Product(models.Model):
         else:
             self.itogo_k_vyplate = self.ostatok + self.fact_day
         self.expected_stavka_day = self.ostatok * self.stavka_day / 100
-        if self.fact_day > self.stavka_period:
+        if self.fact_day > self.stavka_period and self.status != 'На продаже':
             self.status = 'Просрочен'
         self.date_plan_pay = self.date_posted + timezone.timedelta(days=self.srok_kredita)
         super(Product, self).save(*args, **kwargs)

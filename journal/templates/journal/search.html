@@ -1,0 +1,106 @@
+<!-- Modal -->
+<div class="modal fade" id="exampleModalbase" tabindex="-1" role="dialog" aria-labelledby="exampleModalbaseLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalbaseLabel">Расширенный поиск</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+
+
+
+        <form method="GET" action="{% url 'search_form' %}">
+          <div class="form-row">
+              <div class="form-group col-12">
+                  <div class="input-group">
+                      <input style="line-height: 1" class="form-control py-2 border-right-0 border" type="search" placeholder="Номер заявки..." name="search_exact"/>
+                      <span class="input-group-append">
+                          <div class="input-group-text bg-transparent">
+                              <i class="fa fa-search"></i>
+                          </div>
+                      </span>
+                  </div>
+              </div>
+          </div>
+          <div class="form-row">
+              <div class="form-group col-12">
+                  <div class="input-group">
+                      <input style="line-height: 1" class="form-control py-2 border-right-0 border" type="search" placeholder="ФИО клиента..." name="search_contains"/>
+                      <span class="input-group-append">
+                          <div class="input-group-text bg-transparent">
+                              <i class="fa fa-search"></i>
+                          </div>
+                      </span>
+                  </div>
+              </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-auto">
+              <label for="sumCountMin">Сумма заявки от</label>
+              <input type="number" min="0" class="form-control" id="sumCountMin" placeholder="0" name="sum_Count_Min">
+            </div>
+            <div class="form-group col-md-auto">
+              <label for="sumCountMax">Сумма заявки до</label>
+              <input type="number" min="0" class="form-control" id="sumCountMax" placeholder="10000000" name="sum_Count_Max">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-auto">
+              <label for="publishDateMin">Дата выдачи (начало)</label>
+              <input type="date" class="form-control" id="publishDateMin" name="date_min">
+            </div>
+            <div class="form-group col-md-auto">
+              <label for="publishDateMax">Дата выдачи (конец)</label>
+              <input type="date" class="form-control" id="publishDateMax" name="date_max">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-auto">
+              <label for="endDateMin">Дата окончания (начало)</label>
+              <input type="date" class="form-control" id="endDateMin" name="date_min_end">
+            </div>
+            <div class="form-group col-md-auto">
+              <label for="endDateMax">Дата окончания (конец)</label>
+              <input type="date" class="form-control" id="endDateMax" name="date_max_end">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-auto">
+              <label for="inputState">Продукт</label>
+              <select id="inputState" class="form-control" name="status">
+                <option selected>Выберите статус...</option>
+                  {% for status in statuses %}
+                <option value="{{status}}">{{ status }}</option>
+                  {% endfor %}
+              </select>
+            </div>
+            <div class="form-group col-md-auto">
+              <label for="inputStateOfficer">Сотрудник</label>
+              <select id="inputStateOfficer" class="form-control" name="officer">
+                <option selected>Выберите сотрудника...</option>
+                  {% for officer in officers %}
+                <option value="{{officer.name}}">{{ officer.name }}</option>
+                  {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            <button type="submit" class="btn btn-primary">Поиск</button>
+          </div>
+        </form>
+
+
+
+
+
+
+      </div>
+    </div>
+  </div>
+</div>

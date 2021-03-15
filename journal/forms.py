@@ -11,8 +11,13 @@ class ProductForm(forms.ModelForm):
                   'stavka_day',
                   'srok_kredita',
                   'date_posted',
+                  'telephone_number',
                   'zalog',
                   'comment',)
+
+    def __init__(self, *args, **kwargs):
+        super(ProductForm, self).__init__(*args, **kwargs)
+        self.fields['telephone_number'].widget.attrs.update({'type': 'tel'})
 
 
 class EarlyRepaymentForm(forms.ModelForm):
