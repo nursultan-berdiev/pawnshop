@@ -1,0 +1,148 @@
+{% extends "journal/base.html" %}
+{% load verbose_tags %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                  Погашение
+                </button>
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#exampleModal2">
+                  Пролонгация
+                </button>
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form method="GET" action="{% url 'early_repayment' product.pk %}">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Досрочное погашение</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                              <table class="table">
+                                  <thead>
+                                    <tr>
+                                      <th scope="col">{% get_verbose_name object 'itogo_k_vyplate' %}</th>
+                                      <th scope="col">{{ product.itogo_k_vyplate }}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'ostatok' %}</td>
+                                      <td>{{ product.ostatok }}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'fact_day' %}</td>
+                                      <td>{{ product.fact_day }}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'stavka_period' %}</td>
+                                      <td>{{ product.stavka_period }}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                              <div class="form-group col-12">
+                                <label for="summInput">Введите сумму для досрочного платежа</label>
+                                <input type="number" class="form-control" id="summInput" name="summ" step=".01" min="0">
+                                <small id="emailHelp" class="form-text text-muted">Какой то текст</small>
+                              </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                            <button type="submit" class="btn btn-primary" >Провести</button>
+                          </div>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel2" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form method="GET" action="{% url 'prolongation' product.pk %}">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel2">Пролонгация</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                              <table class="table">
+                                  <thead>
+                                    <tr>
+                                      <th scope="col">{% get_verbose_name object 'srok_kredita' %}</th>
+                                      <th scope="col">{{ product.srok_kredita }}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'fact_loan_day' %}</td>
+                                      <td>{{ product.fact_loan_day }}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'fact_day' %}</td>
+                                      <td>{{ product.fact_day }}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>{% get_verbose_name object 'date_plan_pay' %}</td>
+                                      <td>{{ product.date_plan_pay }}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                              <div class="form-group col-12">
+                                <label for="dayInput">Введите количество дней для продления</label>
+                                <input type="number" class="form-control" id="dayInput" name="days" step="1" min="0">
+                                <small class="form-text text-muted">Какой то текст</small>
+                              </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                            <button type="submit" class="btn btn-primary" >Продлить</button>
+                          </div>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+            <div class="table-responsive table mt-2" role="grid" aria-describedby="dataTable_info">
+
+                    <table class="table table-bordered" id="table">
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'nomer_bileta' %}</th>
+                            <td>{{ product.nomer_bileta }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'date_posted' %}</th>
+                            <td>{{ product.date_posted }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'fio_klienta' %}</th>
+                            <td>{{ product.fio_klienta }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'summa_zayavki' %}</th>
+                            <td>{{ product.summa_zayavki }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'status' %}</th>
+                            <td>{{ product.status }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'stavka_day' %}</th>
+                            <td>{{ product.stavka_day }}</td>
+                        </tr>
+                    </table>
+                <div>
+                    <a style="font-size: 110%" class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'product_update' object.pk %}">Изменить</a>
+                    <a style="font-size: 110%" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'product_delete' object.pk %}">Удалить</a>
+                    <a style="font-size: 110%; float:right" class="btn btn-success btn-sm mt-1 mb-1" href="{% url 'excel-report' object.pk %}">Ключевой Лист</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

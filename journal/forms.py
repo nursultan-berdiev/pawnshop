@@ -1,17 +1,21 @@
 from django import forms
-from .models import Loan
+from .models import Product
 
 
-class LoanForm(forms.ModelForm):
+class ProductForm(forms.ModelForm):
     class Meta:
-        model = Loan
+        model = Product
         fields = ('nomer_bileta',
                   'fio_klienta',
                   'summa_zayavki',
-                  'status',
                   'stavka_day',
                   'srok_kredita',
                   'date_posted',
                   'zalog',
-                  'comment',
-                  'credit_user',)
+                  'comment',)
+
+
+class EarlyRepaymentForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ['itogo_k_vyplate']

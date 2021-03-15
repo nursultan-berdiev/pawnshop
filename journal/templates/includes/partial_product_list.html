@@ -1,0 +1,15 @@
+{% for product in products %}
+  <tr style="cursor: pointer" onclick="location.href='{% url 'product_detail' product.pk %}'">
+    <td>{{ product.nomer_bileta }}</td>
+    <td>{{product.date_posted}}</td>
+    <td>{{product.fio_klienta}}</td>
+    <td>{{product.summa_zayavki}}</td>
+    <td>{{product.stavka_day}}</td>
+    <td>{{product.srok_kredita}}</td>
+    <td>{{product.status}}</td>
+  </tr>
+{% empty %}
+  <tr>
+    <td colspan="8" class="text-center bg-warning">No product</td>
+  </tr>
+{% endfor %}
