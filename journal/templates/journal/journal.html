@@ -1,0 +1,63 @@
+{% extends "journal/base.html" %}
+{% load journal_tags %}
+{% block content %}
+
+
+<hr />
+
+<table class="table table-hover">
+    <tr>
+        <th scope="col">Номер заявки</th>
+        <th scope="col">Дата заявки</th>
+        <th scope="col">ФИО клиента/Наименование организации</th>
+        <th scope="col">Сумма заявки</th>
+        <th scope="col">Цель кредита</th>
+        <th scope="col">Срок кредита</th>
+        <th scope="col">Наименование продукта</th>
+        <th scope="col">Обеспечение</th>
+        <th scope="col">Статус</th>
+        <th scope="col">Источник погашения</th>
+        <th scope="col">Причина отказа\одобрения</th>
+        <th scope="col">Дата отказа/одобрения</th>
+        <th scope="col">Номер протокола</th>
+        <th scope="col">Кредитный эксперт</th>
+    </tr>
+    {% for client in clients %}
+    <tr style="cursor: pointer" onclick="location.href='{% url 'client-detail' client.id %}'">
+        <td>{{ client.nomer_zayavki }}</td>
+        <td>{{ client.date_posted|date:"d.m.Y" }}</td>
+        <td>{{ client.fio_klienta|splitpart }}</td>
+        <td>{{ client.summa_zayavki }}</td>
+        <td>{{ client.purpose }}</td>
+        <td>{{ client.srok_kredita }}</td>
+        <td>{{ client.product }}</td>
+        <td>{{ client.zalog }}</td>
+        <td>{{ client.status }}</td>
+        <td>{{ client.istochnik }}</td>
+        <td>{{ client.reason|default_if_none:"" }}</td>
+        <td>{{ client.date_refuse|date:"d.m.Y" }}</td>
+        <td>{{ client.protokol_number|default_if_none:"" }}</td>
+        <td>{{ client.credit_user}}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% if is_paginated %}
+
+    {% if page_obj.has_previous %}
+        <a class="btn btn-outline-info mb-4" href="?page=1">Начало</a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+
+        {% if page_obj.number == num %}
+            <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+
+        {% endif %}
+
+    {% endfor %}
+    {% if page_obj.has_next %}
+        <a class="btn btn-outline-info mb-4" href="?page={{page_obj.paginator.num_pages}}">Последняя</a>
+    {% endif %}
+{% endif %}
+{% endblock content %}

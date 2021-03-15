@@ -1,46 +1,103 @@
 {% extends "journal/base.html" %}
-{% load journal_tags %}
+
+{% load static %}
+
 {% block content %}
-<div class="excel-report">
-    <a href="{% url 'test' %}" type="button" class="btn btn-info">
-        <i class="far fa-file-excel"> </i>
-        <span>Excel Report</span>
-    </a>
+
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-body">
+                <div class="d-sm-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-dark mb-0">Результаты поиска</h3>
+                    <a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'excel_search' %}">
+                        <i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Экспорт в экзель</a>
+                </div>
+            <div class="table-responsive table mt-2 table-hover" role="grid" aria-describedby="dataTable_info">
+                <table class="table my-0" id="product-table" style="font-size: 14px">
+                  <thead>
+                      <tr>
+                          <th>Номер билета</th>
+                          <th>Дата заявки</th>
+                          <th>ФИО клиента</th>
+                          <th>Сумма заявки</th>
+                          <th>% ставка в день</th>
+                          <th>Срок займа в днях</th>
+                          <th>Дата окончания</th>
+                          <th>Статус</th>
+                          <th>Кредитный специалист</th>
+                      </tr>
+                  </thead>
+                  {% for product in queryset %}
+                  <tbody>
+                  <tr style="cursor: pointer" onclick="location.href='{% url 'product_detail' product.pk %}'">
+                    <td>{{ product.nomer_bileta }}</td>
+                    <td>{{product.date_posted}}</td>
+                    <td>{{product.fio_klienta}}</td>
+                    <td>{{product.summa_zayavki}}</td>
+                    <td>{{product.stavka_day}}</td>
+                    <td>{{product.srok_kredita}}</td>
+                    <td>{{product.date_plan_pay}}</td>
+                    <td>{{product.status}}</td>
+                    <td>{{product.credit_user}}</td>
+                  </tr>
+                  </tbody>
+                  {% empty %}
+                  <tr>
+                    <td colspan="10" class="text-center bg-warning">Ничего не найдено</td>
+                  </tr>
+                  {% endfor %}
+                  <tfoot>
+                      <tr>
+                          <td><strong>Номер билета</strong></td>
+                          <td><strong>Дата заявки</strong></td>
+                          <td><strong>ФИО клиента</strong></td>
+                          <td><strong>Сумма заявки</strong></td>
+                          <td><strong>% ставка в день</strong></td>
+                          <td><strong>Срок займа в днях</strong></td>
+                          <td><strong>Дата окончания</strong></td>
+                          <td><strong>Статус</strong></td>
+                          <td><strong>Кредитный специалист</strong></td>
+                      </tr>
+                  </tfoot>
+
+                </table>
+            </div>
+            <div class="row">
+                <div class="col-md-6 align-self-center">
+                    <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite"></p>
+                </div>
+                <div class="col-md-6">
+                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                        <ul class="pagination">
+                              {% if queryset.has_previous %}
+                                  <li class="page-item">
+                                    <a class="page-link" href="?page=1" aria-label="Previous">
+                                      <span aria-hidden="true">«</span>
+                                    </a>
+                                  </li>
+                              {% else %}
+                                  <li class="page-item disabled">
+                                    <a class="page-link" href="?page=1" aria-label="Previous">
+                                      <span aria-hidden="true">«</span>
+                                    </a>
+                                  </li>
+                              {% endif %}
+                              {% for num in queryset.paginator.page_range %}
+                              {% if queryset.number == num %}
+                                  <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                              {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
+                                  <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                              {% endif %}
+                              {% endfor %}
+                              {% if queryset.has_next %}
+                                  <li class="page-item"><a class="page-link" href="?page={{queryset.paginator.num_pages}}" aria-label="Next"><span aria-hidden="true">»</span></a></li>
+                              {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<table class="table table-hover">
-    <tr>
-        <th scope="col">Номер заявки</th>
-        <th scope="col">Дата заявки</th>
-        <th scope="col">ФИО клиента/Наименование организации</th>
-        <th scope="col">Сумма заявки</th>
-        <th scope="col">Цель кредита</th>
-        <th scope="col">Срок кредита</th>
-        <th scope="col">Наименование продукта</th>
-        <th scope="col">Обеспечение</th>
-        <th scope="col">Статус</th>
-        <th scope="col">Источник погашения</th>
-        <th scope="col">Причина отказа\одобрения</th>
-        <th scope="col">Дата отказа/одобрения</th>
-        <th scope="col">Номер протокола</th>
-        <th scope="col">Кредитный эксперт</th>
-    </tr>
-    {% for client in queryset %}
-    <tr style="cursor: pointer" onclick="location.href='{% url 'client-detail' client.id %}'">
-        <td>{{ client.nomer_zayavki }}</td>
-        <td>{{ client.date_posted|date:"d.m.Y" }}</td>
-        <td>{{ client.fio_klienta|splitpart }}</td>
-        <td>{{ client.summa_zayavki }}</td>
-        <td>{{ client.purpose }}</td>
-        <td>{{ client.srok_kredita }}</td>
-        <td>{{ client.product }}</td>
-        <td>{{ client.zalog }}</td>
-        <td>{{ client.status }}</td>
-        <td>{{ client.istochnik }}</td>
-        <td>{{ client.reason|default_if_none:"" }}</td>
-        <td>{{ client.date_refuse|date:"d.m.Y" }}</td>
-        <td>{{ client.protokol_number|default_if_none:"" }}</td>
-        <td>{{ client.credit_user}}</td>
-    </tr>
-    {% endfor %}
-</table>
+
 {% endblock %}

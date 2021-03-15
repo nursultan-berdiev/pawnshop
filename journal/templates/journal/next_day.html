@@ -1,0 +1,30 @@
+ <div>
+    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#exampleModalNextDay">
+  Переход на след день
+    </button>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalNextDay" tabindex="-2" role="dialog" aria-labelledby="exampleModalNextDayLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalNextDayLabel">Переход на следующий день</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h4>Вы уверены, что хотите перейти на следующий день?</h4>
+        <p>Данное действие установит следующий рабочий день и начислит проценты по займам</p>
+        <p>Пожалуйста помните, данное изменение не предотвратимо!</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+        <a type="button" class="btn btn-primary" href="{% url 'new_day' %}">
+              Перейти на след день
+        </a>
+    </div>
+    </div>
+  </div>
+</div>

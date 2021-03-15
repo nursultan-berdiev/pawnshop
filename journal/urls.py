@@ -13,5 +13,10 @@ urlpatterns = [
     path('products/<int:pk>/', login_required(views.ProductDetailView.as_view()), name='product_detail'),
     path('products/<int:pk>/early_payment', login_required(views.early_repayment), name='early_repayment'),
     path('new_day/', login_required(views.new_day), name='new_day'),
+    path('for_sale/<int:pk>/early_payment', login_required(views.for_sale), name='for_sale'),
     path('products/<int:pk>/prolongation', login_required(views.prolongation), name='prolongation'),
+    path('delays/', login_required(views.DelayListView.as_view()), name='delays'),
+    path('search_form/', login_required(views.SearchFilterView), name='search_form'),
+    path('prihod_rashod/', login_required(views.prihod_rashod), name='prihod_rashod'),
+    path('excel_search/', login_required(views.excel_search), name='excel_search'),
 ]

@@ -7,18 +7,24 @@
         <div class="card-body">
             <!-- Button trigger modal -->
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-                  Погашение
+                  Расчет
                 </button>
+                {% if product.status != 'Выкуп' and product.status != 'Реализован'%}
                 <button type="button" class="btn btn-info" data-toggle="modal" data-target="#exampleModal2">
                   Пролонгация
                 </button>
+
+                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModal3">
+                  На продажу
+                </button>
+                {% endif %}
                 <!-- Modal -->
                 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <form method="GET" action="{% url 'early_repayment' product.pk %}">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Досрочное погашение</h5>
+                            <h5 class="modal-title" id="exampleModalLabel">Расчет для погашения</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                               <span aria-hidden="true">&times;</span>
                             </button>
@@ -50,12 +56,14 @@
                               <div class="form-group col-12">
                                 <label for="summInput">Введите сумму для досрочного платежа</label>
                                 <input type="number" class="form-control" id="summInput" name="summ" step=".01" min="0">
-                                <small id="emailHelp" class="form-text text-muted">Какой то текст</small>
+                                <small id="emailHelp" class="form-text text-muted"></small>
                               </div>
                           </div>
                           <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                            <button type="submit" class="btn btn-primary" >Провести</button>
+                              {% if product.itogo_k_vyplate != 0 %}
+                            <button type="submit" class="btn btn-primary" >Совершить платеж</button>
+                              {% endif %}
                           </div>
                         </form>
                     </div>
@@ -109,6 +117,29 @@
                     </div>
                   </div>
                 </div>
+                <div class="modal fade" id="exampleModal3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel2" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form method="GET" action="{% url 'for_sale' product.pk %}">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel3">Выставление на продажу</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                              <div>
+                                  <h5>Вы уверены, что хотите выставить данный залог на продажу?</h5>
+                              </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Нет</button>
+                            <button type="submit" class="btn btn-primary" >Да</button>
+                          </div>
+                        </form>
+                    </div>
+                  </div>
+                </div>
             <div class="table-responsive table mt-2" role="grid" aria-describedby="dataTable_info">
 
                     <table class="table table-bordered" id="table">
@@ -136,11 +167,39 @@
                             <th scope="col">{% get_verbose_name object 'stavka_day' %}</th>
                             <td>{{ product.stavka_day }}</td>
                         </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'srok_kredita' %}</th>
+                            <td>{{ product.srok_kredita }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'fact_loan_day' %}</th>
+                            <td>{{ product.fact_loan_day }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'zalog' %}</th>
+                            <td>{{ product.zalog }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'telephone_number' %}</th>
+                            <td>{{ product.telephone_number }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'comment' %}</th>
+                            <td>{{ product.comment }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'date_plan_pay' %}</th>
+                            <td>{{ product.date_plan_pay }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="col">{% get_verbose_name object 'credit_user' %}</th>
+                            <td>{{ product.credit_user }}</td>
+                        </tr>
                     </table>
                 <div>
                     <a style="font-size: 110%" class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'product_update' object.pk %}">Изменить</a>
                     <a style="font-size: 110%" class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'product_delete' object.pk %}">Удалить</a>
-                    <a style="font-size: 110%; float:right" class="btn btn-success btn-sm mt-1 mb-1" href="{% url 'excel-report' object.pk %}">Ключевой Лист</a>
+<!--                    <a style="font-size: 110%; float:right" class="btn btn-success btn-sm mt-1 mb-1" href="{% url 'excel-report' object.pk %}">Ключевой Лист</a>-->
                 </div>
             </div>
         </div>

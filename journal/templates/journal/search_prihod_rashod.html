@@ -1,0 +1,37 @@
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalprihod" tabindex="-1" role="dialog" aria-labelledby="exampleModalprihodLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalprihodLabel">Приход расход за период</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+
+      <form method="GET" action="{% url 'prihod_rashod' %}">
+          <div class="form-row">
+            <div class="form-group col-md-auto">
+              <label for="publishDateMin">Начальная дата</label>
+              <input type="date" class="form-control" id="publishDateMin" name="date_min_prihod">
+            </div>
+            <div class="form-group col-md-auto">
+              <label for="publishDateMax">Конечная дата</label>
+              <input type="date" class="form-control" id="publishDateMax" name="date_max_prihod">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            <button type="submit" class="btn btn-primary">Поиск</button>
+          </div>
+        </form>
+
+
+
+      </div>
+    </div>
+  </div>
+</div>
