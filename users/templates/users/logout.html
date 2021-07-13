@@ -1,0 +1,8 @@
+{% extends "journal/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="moycontent">
+    <h2>Хотите войти с другого аккаунта?</h2>
+    <a class="btn btn-outline-info" href="{% url 'login' %}">Войти с другого аккаунта</a>
+</div>
+{% endblock content %}
